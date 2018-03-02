@@ -1,8 +1,8 @@
 /* \file drvACIA.cc
    \brief Routines of the ACIA device driver
 //
-//      The ACIA is an asynchronous device (requests return 
-//      immediately, and an interrupt happens later on).  
+//      The ACIA is an asynchronous device (requests return
+//      immediately, and an interrupt happens later on).
 //      This is a layer on top of the ACIA.
 //      Two working modes are to be implemented in assignment 2:
 //      a Busy Waiting mode and an Interrupt mode. The Busy Waiting
@@ -11,8 +11,8 @@
 //      roadmap for further details).
 //
 //  Copyright (c) 1999-2000 INSA de Rennes.
-//  All rights reserved.  
-//  See copyright_insa.h for copyright notice and limitation 
+//  All rights reserved.
+//  See copyright_insa.h for copyright notice and limitation
 //  of liability and disclaimer of warranty provisions.
 //
 */
@@ -27,18 +27,19 @@
 //-------------------------------------------------------------------------
 // DriverACIA::DriverACIA()
 /*! Constructor.
-  Initialize the ACIA driver. In the ACIA Interrupt mode, 
-  initialize the reception index and semaphores and allow 
-  reception and emission interrupts. 
-  In the ACIA Busy Waiting mode, simply inittialize the ACIA 
+  Initialize the ACIA driver. In the ACIA Interrupt mode,
+  initialize the reception index and semaphores and allow
+  reception and emission interrupts.
+  In the ACIA Busy Waiting mode, simply inittialize the ACIA
   working mode and create the semaphore.
   */
 //-------------------------------------------------------------------------
 
 DriverACIA::DriverACIA()
 {
-  printf("**** Warning: contructor of the ACIA driver not implemented yet\n");
-  exit(-1);
+  g_machine->acia->SetWorkingMode(BUSY_WAITING);
+  this->send_sema = new Semaphore((char*)"send_sema", 0);
+  this->receive_sema = new Semaphore((char*)"receive_sema", 0);
 }
 
 //-------------------------------------------------------------------------
@@ -48,15 +49,16 @@ DriverACIA::DriverACIA()
 //-------------------------------------------------------------------------
 
 int DriverACIA::TtySend(char* buff)
-{ 
-  printf("**** Warning: method Tty_Send of the ACIA driver not implemented yet\n");
-  exit(-1);
-  return 0;
+{
+  for(int i = 0; i < strlen(buff); i++) {
+    while(g_machine->acia->GetOutputStateReg() == FULL) {}
+    // A compléter
+  }
 }
 
 //-------------------------------------------------------------------------
 // DriverACIA::TtyReceive(char* buff,int length)
-/*! Routine to reveive a message through the ACIA 
+/*! Routine to reveive a message through the ACIA
 //  (Busy Waiting and Interrupt mode).
   */
 //-------------------------------------------------------------------------
@@ -72,7 +74,7 @@ int DriverACIA::TtyReceive(char* buff,int lg)
 //-------------------------------------------------------------------------
 // DriverACIA::InterruptSend()
 /*! Emission interrupt handler.
-  Used in the ACIA Interrupt mode only. 
+  Used in the ACIA Interrupt mode only.
   Detects when it's the end of the message (if so, releases the send_sema semaphore), else sends the next character according to index ind_send.
   */
 //-------------------------------------------------------------------------
@@ -86,9 +88,9 @@ void DriverACIA::InterruptSend()
 //-------------------------------------------------------------------------
 // DriverACIA::Interrupt_receive()
 /*! Reception interrupt handler.
-  Used in the ACIA Interrupt mode only. Reveices a character through the ACIA. 
-  Releases the receive_sema semaphore and disables reception 
-  interrupts when the last character of the message is received 
+  Used in the ACIA Interrupt mode only. Reveices a character through the ACIA.
+  Releases the receive_sema semaphore and disables reception
+  interrupts when the last character of the message is received
   (character '\0').
   */
 //-------------------------------------------------------------------------
